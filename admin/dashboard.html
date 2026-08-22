@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>LISENZO TOP UP - Admin Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f4f6f9;
+    color: #172033;
+}
+
+header {
+    background: #111827;
+    color: white;
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    color: #f39a00;
+    font-size: 21px;
+    font-weight: bold;
+}
+
+.logout {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 9px 15px;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.container {
+    width: 94%;
+    max-width: 1100px;
+    margin: 25px auto;
+}
+
+.welcome {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 12px rgba(0,0,0,.07);
+}
+
+.add-box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 12px rgba(0,0,0,.07);
+}
+
+.add-box h2 {
+    margin-bottom: 15px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 7px 0 12px;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    font-size: 15px;
+}
+
+.add-btn {
+    width: 100%;
+    background: #f39a00;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 7px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.products-box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0,0,0,.07);
+}
+
+.product {
+    border: 1px solid #eee;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 12px;
+}
+
+.product h3 {
+    margin-bottom: 8px;
+}
+
+.price {
+    color: #f39a00;
+    font-weight: bold;
+    font-size: 19px;
+    margin-bottom: 10px;
+}
+
+.action-btn {
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.edit {
+    background: #2563eb;
+    color: white;
+}
+
+.delete {
+    background: #ef4444;
+    color: white;
+}
+
+#message {
+    margin-top: 12px;
+    font-weight: bold;
+}
+
+@media(max-width:600px) {
+    .container {
+        width: 92%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">LISENZO TOP UP</div>
+
+    <button class="logout" onclick="logout()">
+        Logout
+    </button>
+</header>
+
+
+<div class="container">
+
+    <div class="welcome">
+        <h2>⚽ Admin Dashboard</h2>
+        <p id="adminEmail">Checking login...</p>
+    </div>
+
+
+    <div class="add-box">
+
+        <h2>➕ Add Product</h2>
+
+        <input
+            type="text"
+            id="productName"
+            placeholder="Product name"
+        >
+
+        <input
+            type="text"
+            id="productDescription"
+            placeholder="Description"
+        >
+
+        <input
+            type="number"
+            id="productPrice"
+            placeholder="Price"
+        >
+
+        <button class="add-btn" onclick="addProduct()">
+            ADD PRODUCT
+        </button>
+
+        <div id="message"></div>
+
+    </div>
+
+
+    <div class="products-box">
+
+        <h2>📦 Products</h2>
+
+        <div id="products">
+            Loading products...
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const SUPABASE_URL = "https://spwhqftndqntkgqjczil.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+"sb_publishable_ZJYOQTotkhcF7Zlaeypx4w_L2gNHaya";
+
+
+const supabaseClient =
+window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
+
+
+// Check Admin Login
+async function checkAdmin() {
+
+    const {
+        data: { user }
+    } = await supabaseClient.auth.getUser();
+
+
+    if (!user) {
+
+        window.location.href = "login.html";
+
+        return;
+    }
+
+
+    const { data: admin } =
+        await supabaseClient
+        .from("admins")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+
+    if (!admin) {
+
+        await supabaseClient.auth.signOut();
+
+        window.location.href = "login.html";
+
+        return;
+    }
+
+
+    document.getElementById("adminEmail")
+        .textContent = "Logged in as: " + user.email;
+
+
+    loadProducts();
+}
+
+
+// Load Products
+async function loadProducts() {
+
+    const {
+        data,
+        error
+    } = await supabaseClient
+        .from("products")
+        .select("*")
+        .order("id", { ascending: false });
+
+
+    const container =
+        document.getElementById("products");
+
+
+    if (error) {
+
+        container.innerHTML =
+            "<p>Could not load products.</p>";
+
+        console.error(error);
+
+        return;
+    }
+
+
+    if (!data || data.length === 0) {
+
+        container.innerHTML =
+            "<p>No products found.</p>";
+
+        return;
+    }
+
+
+    container.innerHTML = "";
+
+
+    data.forEach(product => {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "product";
+
+
+        div.innerHTML = `
+            <h3>${escapeHtml(product.name)}</h3>
+
+            <p>
+                ${escapeHtml(product.description || "")}
+            </p>
+
+            <div class="price">
+                ৳ ${product.price}
+            </div>
+
+            <button
+                class="action-btn edit"
+                onclick="editProduct(${product.id}, '${escapeJs(product.name)}', ${product.price})">
+                Edit
+            </button>
+
+            <button
+                class="action-btn delete"
+                onclick="deleteProduct(${product.id})">
+                Delete
+            </button>
+        `;
+
+
+        container.appendChild(div);
+
+    });
+}
+
+
+// Add Product
+async function addProduct() {
+
+    const name =
+        document.getElementById("productName").value.trim();
+
+    const description =
+        document.getElementById("productDescription").value.trim();
+
+    const price =
+        Number(document.getElementById("productPrice").value);
+
+
+    if (!name || !price) {
+
+        document.getElementById("message")
+            .textContent =
+            "Product name এবং price দিন।";
+
+        return;
+    }
+
+
+    const { error } =
+        await supabaseClient
+        .from("products")
+        .insert({
+            name: name,
+            description: description,
+            price: price,
+            "Status": true
+        });
+
+
+    if (error) {
+
+        document.getElementById("message")
+            .textContent =
+            "Error: " + error.message;
+
+        return;
+    }
+
+
+    document.getElementById("message")
+        .textContent =
+        "Product added successfully!";
+
+
+    document.getElementById("productName").value = "";
+    document.getElementById("productDescription").value = "";
+    document.getElementById("productPrice").value = "";
+
+
+    loadProducts();
+}
+
+
+// Edit Product
+async function editProduct(id, oldName, oldPrice) {
+
+    const newName =
+        prompt("Product name:", oldName);
+
+
+    if (newName === null) return;
+
+
+    const newPrice =
+        prompt("Price:", oldPrice);
+
+
+    if (newPrice === null) return;
+
+
+    const { error } =
+        await supabaseClient
+        .from("products")
+        .update({
+            name: newName,
+            price: Number(newPrice)
+        })
+        .eq("id", id);
+
+
+    if (error) {
+
+        alert("Update failed: " + error.message);
+
+        return;
+    }
+
+
+    alert("Product updated successfully!");
+
+    loadProducts();
+}
+
+
+// Delete Product
+async function deleteProduct(id) {
+
+    const confirmDelete =
+        confirm("এই product delete করতে চান?");
+
+
+    if (!confirmDelete) return;
+
+
+    const { error } =
+        await supabaseClient
+        .from("products")
+        .delete()
+        .eq("id", id);
+
+
+    if (error) {
+
+        alert("Delete failed: " + error.message);
+
+        return;
+    }
+
+
+    alert("Product deleted!");
+
+    loadProducts();
+}
+
+
+// Logout
+async function logout() {
+
+    await supabaseClient.auth.signOut();
+
+    window.location.href = "login.html";
+}
+
+
+// Basic HTML escaping
+function escapeHtml(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+// Basic JS escaping
+function escapeJs(value) {
+
+    return String(value)
+        .replaceAll("\\", "\\\\")
+        .replaceAll("'", "\\'")
+        .replaceAll("\n", "\\n")
+        .replaceAll("\r", "\\r");
+}
+
+
+checkAdmin();
+
+</script>
+
+</body>
+</html>
