@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -42,7 +42,6 @@ header {
     border: none;
     padding: 9px 15px;
     border-radius: 7px;
-    cursor: pointer;
 }
 
 .container {
@@ -51,24 +50,12 @@ header {
     margin: 25px auto;
 }
 
-.welcome {
+.box {
     background: white;
     padding: 20px;
     border-radius: 12px;
     margin-bottom: 20px;
     box-shadow: 0 3px 12px rgba(0,0,0,.07);
-}
-
-.add-box {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    box-shadow: 0 3px 12px rgba(0,0,0,.07);
-}
-
-.add-box h2 {
-    margin-bottom: 15px;
 }
 
 input {
@@ -77,7 +64,6 @@ input {
     margin: 7px 0 12px;
     border: 1px solid #ddd;
     border-radius: 7px;
-    font-size: 15px;
 }
 
 .add-btn {
@@ -88,40 +74,29 @@ input {
     padding: 12px;
     border-radius: 7px;
     font-weight: bold;
-    cursor: pointer;
 }
 
-.products-box {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 3px 12px rgba(0,0,0,.07);
-}
-
-.product {
+.product,
+.order {
     border: 1px solid #eee;
     padding: 15px;
     border-radius: 10px;
     margin-top: 12px;
 }
 
-.product h3 {
-    margin-bottom: 8px;
-}
-
 .price {
     color: #f39a00;
-    font-weight: bold;
     font-size: 19px;
-    margin-bottom: 10px;
+    font-weight: bold;
+    margin: 8px 0;
 }
 
 .action-btn {
     border: none;
     padding: 8px 12px;
     border-radius: 6px;
+    margin: 5px 5px 0 0;
     cursor: pointer;
-    margin-right: 5px;
 }
 
 .edit {
@@ -134,15 +109,29 @@ input {
     color: white;
 }
 
-#message {
-    margin-top: 12px;
-    font-weight: bold;
+.status {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-top: 10px;
 }
 
-@media(max-width:600px) {
-    .container {
-        width: 92%;
-    }
+.order-id {
+    color: #666;
+    font-size: 13px;
+}
+
+.order-info {
+    line-height: 1.7;
+    margin-top: 8px;
+}
+
+.success {
+    color: #16a34a;
+}
+
+.error {
+    color: #dc2626;
 }
 </style>
 </head>
@@ -150,23 +139,36 @@ input {
 <body>
 
 <header>
-    <div class="logo">LISENZO TOP UP</div>
+
+    <div class="logo">
+        LISENZO TOP UP
+    </div>
 
     <button class="logout" onclick="logout()">
         Logout
     </button>
+
 </header>
 
 
 <div class="container">
 
-    <div class="welcome">
+    <!-- ADMIN INFO -->
+
+    <div class="box">
+
         <h2>⚽ Admin Dashboard</h2>
-        <p id="adminEmail">Checking login...</p>
+
+        <p id="adminEmail">
+            Checking login...
+        </p>
+
     </div>
 
 
-    <div class="add-box">
+    <!-- ADD PRODUCT -->
+
+    <div class="box">
 
         <h2>➕ Add Product</h2>
 
@@ -188,16 +190,22 @@ input {
             placeholder="Price"
         >
 
-        <button class="add-btn" onclick="addProduct()">
+        <button
+            class="add-btn"
+            onclick="addProduct()">
+
             ADD PRODUCT
+
         </button>
 
-        <div id="message"></div>
+        <p id="message"></p>
 
     </div>
 
 
-    <div class="products-box">
+    <!-- PRODUCTS -->
+
+    <div class="box">
 
         <h2>📦 Products</h2>
 
@@ -207,12 +215,30 @@ input {
 
     </div>
 
+
+    <!-- ORDERS -->
+
+    <div class="box">
+
+        <h2>🛒 Customer Orders</h2>
+
+        <div id="orders">
+            Loading orders...
+        </div>
+
+    </div>
+
 </div>
 
 
 <script>
 
-const SUPABASE_URL = "https://spwhqftndqntkgqjczil.supabase.co";
+// =====================================
+// SUPABASE CONFIG
+// =====================================
+
+const SUPABASE_URL =
+"https://spwhqftndqntkgqjczil.supabase.co";
 
 const SUPABASE_PUBLISHABLE_KEY =
 "sb_publishable_ZJYOQTotkhcF7Zlaeypx4w_L2gNHaya";
@@ -225,7 +251,10 @@ window.supabase.createClient(
 );
 
 
-// Check Admin Login
+// =====================================
+// CHECK ADMIN
+// =====================================
+
 async function checkAdmin() {
 
     const {
@@ -260,14 +289,19 @@ async function checkAdmin() {
 
 
     document.getElementById("adminEmail")
-        .textContent = "Logged in as: " + user.email;
+        .textContent =
+        "Logged in as: " + user.email;
 
 
     loadProducts();
+    loadOrders();
 }
 
 
-// Load Products
+// =====================================
+// LOAD PRODUCTS
+// =====================================
+
 async function loadProducts() {
 
     const {
@@ -276,7 +310,9 @@ async function loadProducts() {
     } = await supabaseClient
         .from("products")
         .select("*")
-        .order("id", { ascending: false });
+        .order("id", {
+            ascending: false
+        });
 
 
     const container =
@@ -286,9 +322,7 @@ async function loadProducts() {
     if (error) {
 
         container.innerHTML =
-            "<p>Could not load products.</p>";
-
-        console.error(error);
+            "<p class='error'>Products load হয়নি.</p>";
 
         return;
     }
@@ -315,7 +349,10 @@ async function loadProducts() {
 
 
         div.innerHTML = `
-            <h3>${escapeHtml(product.name)}</h3>
+
+            <h3>
+                ${escapeHtml(product.name)}
+            </h3>
 
             <p>
                 ${escapeHtml(product.description || "")}
@@ -325,17 +362,32 @@ async function loadProducts() {
                 ৳ ${product.price}
             </div>
 
+            <p>
+                Status:
+                ${product.Status ? "🟢 Active" : "🔴 Inactive"}
+            </p>
+
             <button
                 class="action-btn edit"
-                onclick="editProduct(${product.id}, '${escapeJs(product.name)}', ${product.price})">
+                onclick="editProduct(
+                    ${product.id},
+                    '${escapeJs(product.name)}',
+                    ${product.price}
+                )">
+
                 Edit
+
             </button>
+
 
             <button
                 class="action-btn delete"
                 onclick="deleteProduct(${product.id})">
+
                 Delete
+
             </button>
+
         `;
 
 
@@ -345,24 +397,34 @@ async function loadProducts() {
 }
 
 
-// Add Product
+// =====================================
+// ADD PRODUCT
+// =====================================
+
 async function addProduct() {
 
     const name =
-        document.getElementById("productName").value.trim();
+        document.getElementById("productName")
+        .value.trim();
+
 
     const description =
-        document.getElementById("productDescription").value.trim();
+        document.getElementById("productDescription")
+        .value.trim();
+
 
     const price =
-        Number(document.getElementById("productPrice").value);
+        Number(
+            document.getElementById("productPrice")
+            .value
+        );
 
 
     if (!name || !price) {
 
         document.getElementById("message")
             .textContent =
-            "Product name এবং price দিন।";
+            "Product name এবং price দিন.";
 
         return;
     }
@@ -372,49 +434,78 @@ async function addProduct() {
         await supabaseClient
         .from("products")
         .insert({
+
             name: name,
+
             description: description,
+
             price: price,
+
             "Status": true
+
         });
 
 
     if (error) {
 
         document.getElementById("message")
+            .className = "error";
+
+        document.getElementById("message")
             .textContent =
-            "Error: " + error.message;
+            error.message;
 
         return;
     }
 
 
     document.getElementById("message")
+        .className = "success";
+
+    document.getElementById("message")
         .textContent =
-        "Product added successfully!";
+        "Product added successfully.";
 
 
-    document.getElementById("productName").value = "";
-    document.getElementById("productDescription").value = "";
-    document.getElementById("productPrice").value = "";
+    document.getElementById("productName")
+        .value = "";
+
+    document.getElementById("productDescription")
+        .value = "";
+
+    document.getElementById("productPrice")
+        .value = "";
 
 
     loadProducts();
 }
 
 
-// Edit Product
-async function editProduct(id, oldName, oldPrice) {
+// =====================================
+// EDIT PRODUCT
+// =====================================
+
+async function editProduct(
+    id,
+    oldName,
+    oldPrice
+) {
 
     const newName =
-        prompt("Product name:", oldName);
+        prompt(
+            "Product name:",
+            oldName
+        );
 
 
     if (newName === null) return;
 
 
     const newPrice =
-        prompt("Price:", oldPrice);
+        prompt(
+            "Price:",
+            oldPrice
+        );
 
 
     if (newPrice === null) return;
@@ -424,34 +515,43 @@ async function editProduct(id, oldName, oldPrice) {
         await supabaseClient
         .from("products")
         .update({
+
             name: newName,
+
             price: Number(newPrice)
+
         })
         .eq("id", id);
 
 
     if (error) {
 
-        alert("Update failed: " + error.message);
+        alert(
+            "Update failed: " +
+            error.message
+        );
 
         return;
     }
 
 
-    alert("Product updated successfully!");
-
     loadProducts();
 }
 
 
-// Delete Product
+// =====================================
+// DELETE PRODUCT
+// =====================================
+
 async function deleteProduct(id) {
 
-    const confirmDelete =
-        confirm("এই product delete করতে চান?");
-
-
-    if (!confirmDelete) return;
+    if (
+        !confirm(
+            "এই product delete করতে চান?"
+        )
+    ) {
+        return;
+    }
 
 
     const { error } =
@@ -463,28 +563,227 @@ async function deleteProduct(id) {
 
     if (error) {
 
-        alert("Delete failed: " + error.message);
+        alert(
+            "Delete failed: " +
+            error.message
+        );
 
         return;
     }
 
 
-    alert("Product deleted!");
-
     loadProducts();
 }
 
 
-// Logout
+// =====================================
+// LOAD ORDERS
+// =====================================
+
+async function loadOrders() {
+
+    const container =
+        document.getElementById("orders");
+
+
+    const {
+        data,
+        error
+    } = await supabaseClient
+        .from("orders")
+        .select(`
+            id,
+            customer_name,
+            customer_contact,
+            player_id,
+            payment_method,
+            transaction_id,
+            status,
+            created_at,
+            products (
+                name,
+                price
+            )
+        `)
+        .order("id", {
+            ascending: false
+        });
+
+
+    if (error) {
+
+        container.innerHTML =
+            "<p class='error'>Orders load হয়নি: "
+            + escapeHtml(error.message)
+            + "</p>";
+
+        return;
+    }
+
+
+    if (!data || data.length === 0) {
+
+        container.innerHTML =
+            "<p>এখনো কোনো order নেই.</p>";
+
+        return;
+    }
+
+
+    container.innerHTML = "";
+
+
+    data.forEach(order => {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "order";
+
+
+        const productName =
+            order.products
+            ? order.products.name
+            : "Deleted Product";
+
+
+        div.innerHTML = `
+
+            <div class="order-id">
+                Order #${order.id}
+            </div>
+
+            <h3>
+                ${escapeHtml(productName)}
+            </h3>
+
+            <div class="order-info">
+
+                <b>Customer:</b>
+                ${escapeHtml(order.customer_name)}
+                <br>
+
+                <b>Contact:</b>
+                ${escapeHtml(order.customer_contact)}
+                <br>
+
+                <b>Player ID:</b>
+                ${escapeHtml(order.player_id)}
+                <br>
+
+                <b>Payment:</b>
+                ${escapeHtml(order.payment_method)}
+                <br>
+
+                <b>Transaction ID:</b>
+                ${escapeHtml(order.transaction_id)}
+                <br>
+
+                <b>Created:</b>
+                ${new Date(order.created_at)
+                    .toLocaleString()}
+
+            </div>
+
+
+            <select
+                class="status"
+                onchange="updateOrderStatus(
+                    ${order.id},
+                    this.value
+                )">
+
+                <option
+                    value="Pending"
+                    ${order.status === "Pending"
+                        ? "selected"
+                        : ""}>
+
+                    Pending
+
+                </option>
+
+                <option
+                    value="Completed"
+                    ${order.status === "Completed"
+                        ? "selected"
+                        : ""}>
+
+                    Completed
+
+                </option>
+
+                <option
+                    value="Cancelled"
+                    ${order.status === "Cancelled"
+                        ? "selected"
+                        : ""}>
+
+                    Cancelled
+
+                </option>
+
+            </select>
+
+        `;
+
+
+        container.appendChild(div);
+
+    });
+}
+
+
+// =====================================
+// UPDATE ORDER STATUS
+// =====================================
+
+async function updateOrderStatus(
+    orderId,
+    newStatus
+) {
+
+    const { error } =
+        await supabaseClient
+        .from("orders")
+        .update({
+            status: newStatus
+        })
+        .eq("id", orderId);
+
+
+    if (error) {
+
+        alert(
+            "Status update failed: " +
+            error.message
+        );
+
+        return;
+    }
+
+
+    loadOrders();
+}
+
+
+// =====================================
+// LOGOUT
+// =====================================
+
 async function logout() {
 
     await supabaseClient.auth.signOut();
 
-    window.location.href = "login.html";
+    window.location.href =
+        "login.html";
 }
 
 
-// Basic HTML escaping
+// =====================================
+// ESCAPE HTML
+// =====================================
+
 function escapeHtml(value) {
 
     return String(value)
@@ -496,7 +795,6 @@ function escapeHtml(value) {
 }
 
 
-// Basic JS escaping
 function escapeJs(value) {
 
     return String(value)
@@ -506,6 +804,8 @@ function escapeJs(value) {
         .replaceAll("\r", "\\r");
 }
 
+
+// START
 
 checkAdmin();
 
