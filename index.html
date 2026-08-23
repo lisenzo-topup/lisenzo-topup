@@ -49,3 +49,12 @@ async function loadProducts() {
         productsBox.appendChild(card);
     });
 }
+function buyProduct(id) {
+    const product = document.querySelector(
+        `.product-card button[onclick="buyProduct(${id})"]`
+    );
+
+    if (!product) return;
+
+    alert("Product ID: " + id);
+}
