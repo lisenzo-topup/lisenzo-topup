@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
 <title>LISENZO TOP UP - eFootball Coins</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -166,8 +170,11 @@ footer {
     .hero p {
         font-size: 14px;
     }
+
 }
+
 </style>
+
 </head>
 
 <body>
@@ -178,7 +185,8 @@ footer {
         LISENZO TOP UP
     </div>
 
-    <a href="admin/login.html" class="admin-btn">
+    <a href="admin/login.html"
+       class="admin-btn">
         Admin
     </a>
 
@@ -214,7 +222,9 @@ footer {
 
 <div id="error"></div>
 
-<div class="products" id="products"></div>
+<div class="products"
+     id="products">
+</div>
 
 
 <footer>
@@ -234,15 +244,15 @@ footer {
 
 <script>
 
-// ==============================
+// =====================================
 // SUPABASE CONFIG
-// ==============================
+// =====================================
 
 const SUPABASE_URL =
-"https://spwhqftndqntkgqjczil.supabase.co";
+"PASTE_YOUR_PROJECT_URL_HERE";
 
 const SUPABASE_PUBLISHABLE_KEY =
-"sb_publishable_ZJYOQTotkhcF7Zlaeypx4w_L2gNHaya";
+"PASTE_YOUR_PUBLISHABLE_KEY_HERE";
 
 
 const supabaseClient =
@@ -252,9 +262,9 @@ window.supabase.createClient(
 );
 
 
-// ==============================
+// =====================================
 // LOAD PRODUCTS
-// ==============================
+// =====================================
 
 async function loadProducts() {
 
@@ -268,8 +278,10 @@ async function loadProducts() {
         document.getElementById("products");
 
 
-    const { data, error } =
-        await supabaseClient
+    const {
+        data,
+        error
+    } = await supabaseClient
         .from("products")
         .select("*")
         .eq("Status", true)
@@ -286,7 +298,8 @@ async function loadProducts() {
         console.error(error);
 
         errorBox.textContent =
-            "Products load করতে সমস্যা হয়েছে.";
+            "Products load করতে সমস্যা হয়েছে: "
+            + error.message;
 
         return;
     }
@@ -319,21 +332,23 @@ async function loadProducts() {
             </div>
 
             <h3>
-                ${escapeHtml(product.name)}
+                ${escapeHtml(product.Name)}
             </h3>
 
             <div class="description">
-                ${escapeHtml(product.description || "")}
+                ${escapeHtml(product.Description || "")}
             </div>
 
             <div class="price">
-                ৳ ${product.price}
+                ৳ ${product.Price}
             </div>
 
             <a
                 href="order.html?product=${product.id}"
                 class="buy-btn">
+
                 BUY NOW
+
             </a>
 
         `;
@@ -345,9 +360,9 @@ async function loadProducts() {
 }
 
 
-// ==============================
+// =====================================
 // SECURITY
-// ==============================
+// =====================================
 
 function escapeHtml(value) {
 
